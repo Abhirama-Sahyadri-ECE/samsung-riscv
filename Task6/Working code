@@ -1,0 +1,38 @@
+#include "ch32v00x.h"
+#include "debug.h"  // Include debug and delay functions
+
+#define LDR_PIN GPIO_Pin_3  // PD3
+#define LED_PIN GPIO_Pin_2  // PD2
+
+void DelayMs(uint32_t ms) {  // Simple delay function
+    for (volatile uint32_t i = 0; i < ms * 1000; i++) {
+        __NOP();  // No operation (wait)
+    }
+}
+
+int main(void) {
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+    // Enable GPIO clock
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
+
+    // Configure LDR_PIN as input (Pull-up mode)
+    GPIO_InitStructure.GPIO_Pin = LDR_PIN;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;  // Input with pull-up
+    GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+    // Configure LED_PIN as output
+    GPIO_InitStructure.GPIO_Pin = LED_PIN;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;  // Push-pull output
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+    while (1) {  // Loop forever
+        if (GPIO_ReadInputDataBit(GPIOD, LDR_PIN) == Bit_RESET) {  
+            GPIO_SetBits(GPIOD, LED_PIN);  // Turn ON LED
+        } else {
+            GPIO_ResetBits(GPIOD, LED_PIN);  // Turn OFF LED
+        }
+        DelayMs(500);  // Delay 500ms
+    }
+}
